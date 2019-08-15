@@ -97,15 +97,19 @@ func (p *Part) parseContentDisposition() {
 // The boundary is usually obtained from the "boundary" parameter of
 // the message's "Content-Type" header. Use mime.ParseMediaType to
 // parse such headers.
-func NewReader(r io.Reader, boundary string) *Reader {
+func NewReaderWithSize(r io.Reader, boundary string, bufferSize int) *Reader {
 	b := []byte("\r\n--" + boundary + "--")
 	return &Reader{
-		bufReader:        bufio.NewReaderSize(&stickyErrorReader{r: r}, peekBufferSize),
+		bufReader:        bufio.NewReaderSize(&stickyErrorReader{r: r}, bufferSize),
 		nl:               b[:2],
 		nlDashBoundary:   b[:len(b)-2],
 		dashBoundaryDash: b[2:],
 		dashBoundary:     b[2 : len(b)-2],
 	}
+}
+
+func NewReader(r io.Reader, boundary string) *Reader {
+	return NewReaderWithSize(r, boundary, peekBufferSize)
 }
 
 // stickyErrorReader is an io.Reader which never calls Read on its
